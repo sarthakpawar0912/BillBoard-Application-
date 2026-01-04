@@ -1,16 +1,14 @@
 package com.billboarding.Services.Advertiser;
+
 import com.billboarding.DTO.Advertiser.CampaignAnalyticsDTO;
 import com.billboarding.Entity.Advertiser.Campaign;
 import com.billboarding.Entity.User;
 import com.billboarding.Repository.Advertiser.CampaignBookingRepository;
 import com.billboarding.Repository.Advertiser.CampaignRepository;
-import com.billboarding.Repository.Payment.PaymentHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
-
 
 @Service
 @RequiredArgsConstructor
@@ -18,9 +16,8 @@ public class CampaignAnalyticsService {
 
     private final CampaignRepository campaignRepo;
     private final CampaignBookingRepository cbRepo;
-    private final PaymentHistoryRepository paymentRepo;
 
-    public CampaignAnalyticsDTO getAnalytics(Long campaignId, User advertiser) {
+    public CampaignAnalyticsDTO analytics(Long campaignId, User advertiser) {
 
         Campaign campaign = campaignRepo.findById(campaignId)
                 .orElseThrow(() -> new RuntimeException("Campaign not found"));
@@ -29,21 +26,15 @@ public class CampaignAnalyticsService {
             throw new RuntimeException("Unauthorized");
         }
 
-        // Total spend from payments
-        BigDecimal spent = paymentRepo.findAll().stream()
-                .filter(p -> cbRepo.findByCampaign(campaign).stream()
-                        .anyMatch(cb -> cb.getBooking().getId()
-                                .equals(p.getBooking().getId())))
-                .map(p -> BigDecimal.valueOf(p.getAmount()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal spent = BigDecimal.valueOf(
+                cbRepo.findByCampaign(campaign)
+                        .stream()
+                        .mapToDouble(cb -> cb.getBooking().getTotalPrice())
+                        .sum()
+        );
 
-        // Simulated impressions (REALISTIC placeholder)
-        long impressions = spent.longValue() * 20; // 1₹ ≈ 20 impressions
-
-        double cpm = impressions == 0 ? 0 :
-                (spent.doubleValue() / impressions) * 1000;
-
-        double utilization = spent.doubleValue() / campaign.getBudget().doubleValue() * 100;
+        long impressions = spent.longValue() * 20; // business rule
+        double cpm = impressions == 0 ? 0 : (spent.doubleValue() / impressions) * 1000;
 
         return CampaignAnalyticsDTO.builder()
                 .campaignId(campaign.getId())
@@ -53,7 +44,9 @@ public class CampaignAnalyticsService {
                 .spent(spent)
                 .impressions(impressions)
                 .cpm(cpm)
-                .budgetUtilization(utilization)
+                .budgetUtilization(
+                        spent.doubleValue() / campaign.getBudget() * 100
+                )
                 .startDate(campaign.getStartDate())
                 .endDate(campaign.getEndDate())
                 .build();

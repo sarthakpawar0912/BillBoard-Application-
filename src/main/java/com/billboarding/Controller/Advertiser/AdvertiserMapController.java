@@ -38,7 +38,14 @@ public class AdvertiserMapController {
         return ResponseEntity.ok(billboardRepository.getHeatmapData());
     }
 
-
-
+    /**
+     * Get all available billboards for map display.
+     * Used by frontend for browse/detail modal.
+     * GET /api/advertiser/map/billboards
+     */
+    @GetMapping("/billboards")
+    public ResponseEntity<List<Billboard>> getAllBillboards() {
+        return ResponseEntity.ok(billboardRepository.findByAvailableTrue());
+    }
 
 }

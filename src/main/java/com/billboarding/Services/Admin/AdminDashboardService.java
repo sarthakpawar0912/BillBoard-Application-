@@ -22,32 +22,28 @@ public class AdminDashboardService {
 
         AdminDashboardResponse res = new AdminDashboardResponse();
 
-        // USER STATS
+        // USER STATS - Using optimized COUNT queries (no entity loading)
         res.setTotalUsers(userRepository.count());
-        res.setTotalOwners(userRepository.findByRole(UserRole.OWNER).size());
-        res.setTotalAdvertisers(userRepository.findByRole(UserRole.ADVERTISER).size());
-        res.setTotalPendingKyc(userRepository.findByKycStatus(KycStatus.PENDING).size());
-        res.setTotalBlockedUsers(userRepository.findByBlockedTrue().size());
+        res.setTotalOwners(userRepository.countByRole(UserRole.OWNER));
+        res.setTotalAdvertisers(userRepository.countByRole(UserRole.ADVERTISER));
+        res.setTotalPendingKyc(userRepository.countByKycStatus(KycStatus.PENDING));
+        res.setTotalBlockedUsers(userRepository.countByBlockedTrue());
 
-        // BILLBOARD STATS
+        // BILLBOARD STATS - Using optimized COUNT queries
         res.setTotalBillboards(billboardRepository.count());
-        res.setAvailableBillboards(billboardRepository.findByAvailableTrue().size());
-        res.setBookedBillboards(bookingRepository.findByStatus(BookingStatus.APPROVED).size());
+        res.setAvailableBillboards(billboardRepository.countByAvailableTrue());
+        res.setBookedBillboards(bookingRepository.countByStatus(BookingStatus.APPROVED));
 
-        // BOOKING STATS
+        // BOOKING STATS - Using optimized COUNT queries
         res.setTotalBookings(bookingRepository.count());
-        res.setPendingBookings(bookingRepository.findByStatus(BookingStatus.PENDING).size());
-        res.setApprovedBookings(bookingRepository.findByStatus(BookingStatus.APPROVED).size());
-        res.setRejectedBookings(bookingRepository.findByStatus(BookingStatus.REJECTED).size());
-        res.setCancelledBookings(bookingRepository.findByStatus(BookingStatus.CANCELLED).size());
+        res.setPendingBookings(bookingRepository.countByStatus(BookingStatus.PENDING));
+        res.setApprovedBookings(bookingRepository.countByStatus(BookingStatus.APPROVED));
+        res.setRejectedBookings(bookingRepository.countByStatus(BookingStatus.REJECTED));
+        res.setCancelledBookings(bookingRepository.countByStatus(BookingStatus.CANCELLED));
 
-        // REVENUE (approved bookings only for now)
-        res.setTotalRevenue(
-                bookingRepository.findByStatus(BookingStatus.APPROVED)
-                        .stream()
-                        .mapToDouble(b -> b.getTotalPrice())
-                        .sum()
-        );
+        // REVENUE - Using optimized SUM query (no entity loading!)
+        res.setTotalRevenue(bookingRepository.sumTotalPriceByStatus(BookingStatus.APPROVED));
+
         return res;
     }
 }

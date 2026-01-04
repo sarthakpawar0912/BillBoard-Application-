@@ -13,8 +13,35 @@ public interface BillboardRepository extends JpaRepository<Billboard, Long> {
     // All boards by owner
     List<Billboard> findByOwner(User owner);
 
+    // All boards by owner WITH images (JOIN FETCH)
+    @Query("SELECT DISTINCT b FROM Billboard b LEFT JOIN FETCH b.imagePaths WHERE b.owner = :owner")
+    List<Billboard> findByOwnerWithImages(@Param("owner") User owner);
+
+    // All billboards with images and owner (for admin)
+    @Query("SELECT DISTINCT b FROM Billboard b LEFT JOIN FETCH b.imagePaths LEFT JOIN FETCH b.owner")
+    List<Billboard> findAllWithDetails();
+
+    // Single billboard with images and owner
+    @Query("SELECT b FROM Billboard b LEFT JOIN FETCH b.imagePaths LEFT JOIN FETCH b.owner WHERE b.id = :id")
+    java.util.Optional<Billboard> findByIdWithDetails(@Param("id") Long id);
+
+    // Count billboards by owner (for admin stats)
+    long countByOwner(User owner);
+
     // All currently marked as available = true
     List<Billboard> findByAvailableTrue();
+
+    // Available billboards with images and owner (for advertiser browse)
+    @Query("SELECT DISTINCT b FROM Billboard b LEFT JOIN FETCH b.imagePaths LEFT JOIN FETCH b.owner WHERE b.available = true")
+    List<Billboard> findAvailableWithImagesAndOwner();
+
+    // ===== OPTIMIZED COUNT QUERIES =====
+    long countByAvailableTrue();
+    long countByAdminBlockedTrue();
+
+    // Fetch billboards with images and owner eagerly
+    @Query("SELECT DISTINCT b FROM Billboard b LEFT JOIN FETCH b.imagePaths LEFT JOIN FETCH b.owner WHERE b.available = true")
+    List<Billboard> findAvailableWithImages();
 
     // Advertiser: only visible & mapped billboards
     List<Billboard> findByAvailableTrueAndLatitudeNotNullAndLongitudeNotNull();

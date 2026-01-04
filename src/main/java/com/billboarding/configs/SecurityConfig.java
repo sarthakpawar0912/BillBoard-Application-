@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -32,6 +32,7 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // ✅ GLOBAL CORS CONFIGURATION
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
@@ -44,10 +45,20 @@ public class SecurityConfig {
         ));
 
         configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
         ));
 
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With"
+        ));
+
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
@@ -61,28 +72,35 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable()) // Webhooks require CSRF disabled
+                // ✅ ENABLE CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // PUBLIC
-                        .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // 🔓 PUBLIC
+                        .requestMatchers(
+                                "/uploads/**",
+                                "/api/auth/**",
+                                "/api/security/2fa/reset-request",
+                                "/api/security/2fa/reset-confirm",
+                                "/api/webhooks/**"
+                        ).permitAll()
 
-                        // 🔥 RAZORPAY WEBHOOK (NO JWT, NO AUTH)
-                        .requestMatchers("/api/webhooks/**").permitAll()
-
-                        // PAYMENT APIs (JWT REQUIRED)
+                        // 🔐 AUTHENTICATED
+                        .requestMatchers("/api/user/**").authenticated()
                         .requestMatchers("/api/payments/**").authenticated()
 
-                        // ROLE BASED
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/owner/**").hasAuthority("OWNER")
-                        .requestMatchers("/api/advertiser/**").hasAuthority("ADVERTISER")
+                        // 🔒 ROLE BASED
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/owner/**").hasRole("OWNER")
+                        .requestMatchers("/api/advertiser/**").hasRole("ADVERTISER")
 
                         .anyRequest().authenticated()
                 )
 
+                // 🔑 JWT FILTER
                 .addFilterBefore(
                         jwtAuthFilter,
                         UsernamePasswordAuthenticationFilter.class

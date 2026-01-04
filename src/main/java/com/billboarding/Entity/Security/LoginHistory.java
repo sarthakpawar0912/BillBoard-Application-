@@ -19,6 +19,14 @@ public class LoginHistory {
 
     private String email;
     private String ipAddress;
-    private String userAgent;
     private LocalDateTime loginAt;
+    @Column(nullable = false)
+    private boolean risky;
+
+    @Column(nullable = false)
+    private String ip;
+
+    @Column(nullable = false, length = 255)
+    private String userAgent;
+
 }

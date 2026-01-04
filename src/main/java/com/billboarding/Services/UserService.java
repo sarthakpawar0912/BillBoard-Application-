@@ -51,4 +51,29 @@ public class UserService {
 
         return saved;
     }
+    // 🔹 Self email update (OWNER / ADVERTISER / ADMIN)
+    public User updateEmail(User user, String newEmail) {
+
+        if (userRepository.existsByEmail(newEmail)) {
+            throw new RuntimeException("Email already in use");
+        }
+
+        user.setEmail(newEmail);
+        return userRepository.save(user);
+    }
+
+    // 🔹 Admin email update
+    public User adminUpdateEmail(Long userId, String newEmail) {
+
+        if (userRepository.existsByEmail(newEmail)) {
+            throw new RuntimeException("Email already in use");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setEmail(newEmail);
+        return userRepository.save(user);
+    }
+
 }

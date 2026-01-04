@@ -10,4 +10,6 @@ public interface LoginHistoryRepository
         extends JpaRepository<LoginHistory, Long> {
 
     List<LoginHistory> findByEmailOrderByLoginAtDesc(String email);
+    List<LoginHistory> findTop5ByEmailOrderByLoginAtDesc(String email);
+
 }

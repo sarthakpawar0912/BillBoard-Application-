@@ -8,4 +8,6 @@ public interface TwoFactorOTPRepository
         extends JpaRepository<TwoFactorOTP, Long> {
 
     Optional<TwoFactorOTP> findTopByEmailOrderByExpiresAtDesc(String email);
+
+    void deleteByEmail(String email);
 }

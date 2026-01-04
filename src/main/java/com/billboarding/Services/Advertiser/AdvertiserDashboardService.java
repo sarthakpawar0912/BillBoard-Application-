@@ -20,7 +20,8 @@ public class AdvertiserDashboardService {
 
     public AdvertiserDashboardResponse getDashboard(User advertiser) {
 
-        List<Booking> bookings = bookingRepository.findByAdvertiser(advertiser);
+        // Use findByAdvertiserWithDetails to ensure billboard data is properly loaded
+        List<Booking> bookings = bookingRepository.findByAdvertiserWithDetails(advertiser);
 
         AdvertiserDashboardResponse res = new AdvertiserDashboardResponse();
         res.setTotalBookings(bookings.size());
@@ -31,9 +32,9 @@ public class AdvertiserDashboardService {
 
         res.setRecentBookings(bookings.stream().limit(5).toList());
 
-        // favourites
+        // favourites - use JOIN FETCH query for images and owner
         res.setFavouriteBillboards(
-                favRepo.findByAdvertiser(advertiser)
+                favRepo.findByAdvertiserWithDetails(advertiser)
                         .stream()
                         .map(f -> f.getBillboard())
                         .toList()

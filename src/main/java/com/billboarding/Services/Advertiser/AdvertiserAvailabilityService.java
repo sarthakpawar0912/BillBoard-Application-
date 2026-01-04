@@ -42,10 +42,11 @@ public class AdvertiserAvailabilityService {
         );
 
         return new BillboardAvailabilityResponse(
-                finalPrice,
                 date,
-                booked ? "BOOKED" : "AVAILABLE"
-                );
+                booked ? "BOOKED" : "AVAILABLE",
+                billboard.getPricePerDay(),  // basePrice
+                finalPrice                    // finalPrice (with surge)
+        );
     }
 
     // ⭐ CORE SURGE LOGIC ⭐

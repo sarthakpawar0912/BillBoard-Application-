@@ -6,45 +6,48 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
-import java.util.List;
-@Service
+import java.time.LocalDateTime;@Service
 @RequiredArgsConstructor
 public class TwoFactorService {
 
-    private final TwoFactorOTPRepository otpRepo;
+    private final TwoFactorOTPRepository repo;
     private final EmailService emailService;
+    private final PasswordEncoder encoder;
 
-    public void sendOTP(String email) {
+    public void sendOtp(String email) {
 
-        String otp = String.valueOf(100000 + new SecureRandom().nextInt(900000));
+        repo.findTopByEmailOrderByExpiresAtDesc(email).ifPresent(old -> {
+            if (old.getLastSentAt().isAfter(LocalDateTime.now().minusSeconds(60))) {
+                throw new RuntimeException("Wait before requesting OTP again");
+            }
+            repo.delete(old);
+        });
 
-        otpRepo.save(
+        String rawOtp = String.valueOf(100000 + new SecureRandom().nextInt(900000));
+
+        repo.save(
                 TwoFactorOTP.builder()
                         .email(email)
-                        .otp(otp)
+                        .otpHash(encoder.encode(rawOtp))
                         .expiresAt(LocalDateTime.now().plusMinutes(5))
+                        .lastSentAt(LocalDateTime.now())
                         .build()
         );
 
-        emailService.send(
-                email,
-                "Your Login OTP",
-                "Your OTP is: " + otp + " (valid for 5 minutes)"
-        );
+        emailService.send(email, "Login OTP", "OTP: " + rawOtp);
     }
 
     public void verifyOTP(String email, String otp) {
 
-        TwoFactorOTP record = otpRepo.findTopByEmailOrderByExpiresAtDesc(email)
+        TwoFactorOTP record = repo.findTopByEmailOrderByExpiresAtDesc(email)
                 .orElseThrow(() -> new RuntimeException("OTP not found"));
 
-        if (record.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (record.getExpiresAt().isBefore(LocalDateTime.now()))
             throw new RuntimeException("OTP expired");
-        }
 
-        if (!record.getOtp().equals(otp)) {
+        if (!encoder.matches(otp, record.getOtpHash()))
             throw new RuntimeException("Invalid OTP");
-        }
+
+        repo.delete(record);
     }
 }

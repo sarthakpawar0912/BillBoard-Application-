@@ -18,7 +18,7 @@ public class AdminAnalyticsService {
     public AdminCancellationStats getCancellationStats() {
 
         List<Booking> cancelled =
-                bookingRepo.findByStatusIn(
+                bookingRepo.findByStatusInWithDetails(
                         List.of(
                                 BookingStatus.CANCELLED,
                                 BookingStatus.CANCELLED_NO_REFUND

@@ -5,11 +5,14 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "campaign_bookings")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(
+        name = "campaign_bookings",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"campaign_id", "booking_id"}
+        )
+)
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder
 public class CampaignBooking {
 
@@ -17,9 +20,9 @@ public class CampaignBooking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Campaign campaign;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Booking booking;
 }

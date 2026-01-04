@@ -2,13 +2,10 @@ package com.billboarding.Entity.Security;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-@Entity
+import java.time.LocalDateTime;@Entity
 @Table(name = "two_factor_otp")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder
 public class TwoFactorOTP {
 
@@ -18,7 +15,9 @@ public class TwoFactorOTP {
 
     private String email;
 
-    private String otp;
+    @Column(nullable = false)
+    private String otpHash;
 
     private LocalDateTime expiresAt;
+    private LocalDateTime lastSentAt;
 }

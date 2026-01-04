@@ -13,8 +13,6 @@ public class AdminDashboardController {
 
     private final AdminDashboardService dashboardService;
 
-
-    // NEW PATH → No more conflict
     @GetMapping("/stats")
     public ResponseEntity<AdminDashboardResponse> getDashboardStats() {
         return ResponseEntity.ok(dashboardService.getDashboardData());

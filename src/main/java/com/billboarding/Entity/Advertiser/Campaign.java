@@ -1,10 +1,11 @@
 package com.billboarding.Entity.Advertiser;
+
 import com.billboarding.ENUM.CampaignStatus;
 import com.billboarding.Entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,36 +13,38 @@ import java.util.List;
 @Entity
 @Table(name = "campaigns")
 @Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@NoArgsConstructor @AllArgsConstructor
+@Builder
 public class Campaign {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User advertiser;
 
     @Enumerated(EnumType.STRING)
     private CampaignStatus status;
 
-    private Integer billboards;
+    private Double budget;
+    private Double spent;
+
     private LocalDate startDate;
     private LocalDate endDate;
 
-    private BigDecimal budget;
-    private BigDecimal spent;
-
-    private Long impressions;
-
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     private List<String> cities;
 
     private LocalDateTime createdAt;
 
     @PrePersist
-    public void onCreate() {
+    void onCreate() {
         createdAt = LocalDateTime.now();
+        if (status == null) status = CampaignStatus.SCHEDULED;
+        if (spent == null) spent = 0.0;
     }
 }

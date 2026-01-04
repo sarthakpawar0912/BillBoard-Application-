@@ -1,7 +1,9 @@
 package com.billboarding.Entity;
 
 import com.billboarding.ENUM.KycStatus;
+import com.billboarding.ENUM.TwoFactorMethod;
 import com.billboarding.ENUM.UserRole;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -22,7 +24,12 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_user_email", columnList = "email"),
+    @Index(name = "idx_user_role", columnList = "role"),
+    @Index(name = "idx_user_kyc", columnList = "kycStatus"),
+    @Index(name = "idx_user_blocked", columnList = "blocked")
+})
 public class User implements UserDetails {
 
     @Id
@@ -39,6 +46,7 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @JsonIgnore
     @NotBlank(message = "Password is required")
     @Column(nullable = false)
     private String password;
@@ -60,6 +68,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private boolean twoFactorEnabled;
 
+    @Column(nullable = false)
+    private boolean forceTwoFactor;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -69,7 +79,10 @@ public class User implements UserDetails {
         createdAt = LocalDateTime.now();
     }
 
-
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private TwoFactorMethod twoFactorMethod = TwoFactorMethod.NONE;
     // ===============================
     //      USERDETAILS METHODS
     // ===============================

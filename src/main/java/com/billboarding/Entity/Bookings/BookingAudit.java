@@ -4,21 +4,30 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "booking_audit_log")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class BookingAudit {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // ✅ REQUIRED
     private Long id;
 
+    @Column(nullable = false)
     private Long bookingId;
-    private String action;     // CREATED, APPROVED, PAID, CANCELLED_NO_REFUND
+
+    @Column(nullable = false)
+    private String action;     // CREATED, APPROVED, CANCELLED
+
+    @Column(nullable = false)
     private String actorRole;  // ADMIN / OWNER / ADVERTISER
+
+    @Column(nullable = false)
     private Long actorId;
 
     private LocalDateTime createdAt;

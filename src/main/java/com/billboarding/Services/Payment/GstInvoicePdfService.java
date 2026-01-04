@@ -41,14 +41,22 @@ public class GstInvoicePdfService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Paid booking not found"));
 
-        double baseAmount = pay.getAmount();
-        double cgst = baseAmount * CGST;
-        double sgst = baseAmount * SGST;
-        double total = baseAmount + cgst + sgst;
+        // Get actual amounts from booking (NOT from pay.getAmount() which is totalPrice)
+        var booking = pay.getBooking();
+
+        // Taxable value = base (owner share) + commission (platform share)
+        double taxableValue = booking.getBaseAmount() + booking.getCommissionAmount();
+
+        // Use actual GST from booking (already calculated correctly)
+        double cgst = booking.getGstAmount() / 2;  // Split 18% into CGST 9%
+        double sgst = booking.getGstAmount() / 2;  // Split 18% into SGST 9%
+
+        // Total is what customer paid
+        double total = booking.getTotalPrice();
 
         long days = ChronoUnit.DAYS.between(
-                pay.getBooking().getStartDate(),
-                pay.getBooking().getEndDate()
+                booking.getStartDate(),
+                booking.getEndDate()
         ) + 1;
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -102,12 +110,12 @@ public class GstInvoicePdfService {
         addHeader(serviceTable, "Rate");
         addHeader(serviceTable, "Amount");
 
-        serviceTable.addCell(pay.getBooking().getBillboard().getTitle());
-        serviceTable.addCell(pay.getBooking().getStartDate().toString());
-        serviceTable.addCell(pay.getBooking().getEndDate().toString());
+        serviceTable.addCell(booking.getBillboard().getTitle());
+        serviceTable.addCell(booking.getStartDate().toString());
+        serviceTable.addCell(booking.getEndDate().toString());
         serviceTable.addCell(String.valueOf(days));
-        serviceTable.addCell("₹" + (baseAmount / days));
-        serviceTable.addCell("₹" + baseAmount);
+        serviceTable.addCell("₹" + String.format("%.2f", taxableValue / days));
+        serviceTable.addCell("₹" + String.format("%.2f", taxableValue));
 
         doc.add(serviceTable);
 
@@ -117,7 +125,7 @@ public class GstInvoicePdfService {
         taxTable.setWidthPercentage(40);
         taxTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
 
-        addRow(taxTable, "Sub Total", baseAmount);
+        addRow(taxTable, "Sub Total", taxableValue);
         addRow(taxTable, "CGST 9%", cgst);
         addRow(taxTable, "SGST 9%", sgst);
         addRowBold(taxTable, "TOTAL", total);

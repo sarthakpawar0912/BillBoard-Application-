@@ -18,7 +18,7 @@ public class OwnerBooking {
     }
 
     public List<Booking> getBookingsForOwner(User owner) {
-        return bookingRepository.findByBillboard_Owner(owner);
+        return bookingRepository.findByBillboardOwnerWithDetails(owner);
     }
 
     public Booking approveBooking(User owner, Long bookingId) {
@@ -60,21 +60,21 @@ public class OwnerBooking {
     }
 
     public List<Booking> getPendingRequests(User owner) {
-        return bookingRepository.findByBillboard_OwnerAndStatus(
+        return bookingRepository.findByBillboardOwnerAndStatusWithDetails(
                 owner,
                 BookingStatus.PENDING
         );
     }
 
     public List<Booking> getUpcomingBookings(User owner) {
-        return bookingRepository.findByBillboard_OwnerAndStatus(
+        return bookingRepository.findByBillboardOwnerAndStatusWithDetails(
                 owner,
                 BookingStatus.APPROVED
         );
     }
 
     public List<Booking> getCompletedBookings(User owner) {
-        return bookingRepository.findByBillboard_OwnerAndStatus(
+        return bookingRepository.findByBillboardOwnerAndStatusWithDetails(
                 owner,
                 BookingStatus.APPROVED
         );

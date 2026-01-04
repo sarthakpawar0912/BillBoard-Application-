@@ -46,9 +46,65 @@ public class OwnerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
-        billboardService.deleteBillboard(id);
-        return ResponseEntity.ok("Billboard deleted");
+    public ResponseEntity<java.util.Map<String, String>> delete(
+            @PathVariable Long id,
+            @RequestParam(value = "force", defaultValue = "false") boolean force,
+            Authentication auth) {
+        User owner = (User) auth.getPrincipal();
+        billboardService.deleteBillboard(id, owner.getId(), force);
+        return ResponseEntity.ok(java.util.Map.of("message", "Billboard deleted successfully"));
+    }
+
+    /**
+     * Toggle billboard availability
+     * POST /api/owner/billboards/{id}/toggle-availability
+     */
+    @PostMapping("/{id}/toggle-availability")
+    public ResponseEntity<?> toggleAvailability(@PathVariable Long id, Authentication auth) {
+        User owner = (User) auth.getPrincipal();
+        Billboard board = billboardService.getBillboardById(id);
+
+        if (board == null)
+            return ResponseEntity.badRequest().body("Billboard not found");
+
+        if (!board.getOwner().getId().equals(owner.getId()))
+            return ResponseEntity.status(403).body("Not your billboard");
+
+        // Check if admin has blocked this billboard
+        if (board.isAdminBlocked()) {
+            return ResponseEntity.status(403).body("This billboard has been blocked by admin. Contact support to resolve.");
+        }
+
+        board.setAvailable(!board.isAvailable());
+        return ResponseEntity.ok(billboardService.save(board));
+    }
+
+    /**
+     * Set billboard availability explicitly
+     * PUT /api/owner/billboards/{id}/availability
+     */
+    @PutMapping("/{id}/availability")
+    public ResponseEntity<?> setAvailability(
+            @PathVariable Long id,
+            @RequestParam boolean available,
+            Authentication auth) {
+
+        User owner = (User) auth.getPrincipal();
+        Billboard board = billboardService.getBillboardById(id);
+
+        if (board == null)
+            return ResponseEntity.badRequest().body("Billboard not found");
+
+        if (!board.getOwner().getId().equals(owner.getId()))
+            return ResponseEntity.status(403).body("Not your billboard");
+
+        // Check if admin has blocked this billboard (only block making available, allow making unavailable)
+        if (board.isAdminBlocked() && available) {
+            return ResponseEntity.status(403).body("This billboard has been blocked by admin. Contact support to resolve.");
+        }
+
+        board.setAvailable(available);
+        return ResponseEntity.ok(billboardService.save(board));
     }
 
     @PostMapping(value = "/{id}/upload-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

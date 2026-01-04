@@ -1,0 +1,51 @@
+package com.billboarding.DTO.Booking;
+
+import com.billboarding.ENUM.BillboardType;
+import com.billboarding.Entity.OWNER.Billboard;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * Billboard DTO with owner as UserSummaryDTO (no password exposure)
+ */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class BillboardSummaryDTO {
+
+    private Long id;
+    private String title;
+    private String location;
+    private Double latitude;
+    private Double longitude;
+    private Double pricePerDay;
+    private String size;
+    private boolean available;
+    private BillboardType type;
+    private UserSummaryDTO owner;
+    private LocalDateTime createdAt;
+    private List<String> imagePaths;
+
+    public static BillboardSummaryDTO fromEntity(Billboard billboard) {
+        if (billboard == null) return null;
+
+        return BillboardSummaryDTO.builder()
+                .id(billboard.getId())
+                .title(billboard.getTitle())
+                .location(billboard.getLocation())
+                .latitude(billboard.getLatitude())
+                .longitude(billboard.getLongitude())
+                .pricePerDay(billboard.getPricePerDay())
+                .size(billboard.getSize())
+                .available(billboard.isAvailable())
+                .type(billboard.getType())
+                .owner(UserSummaryDTO.fromEntity(billboard.getOwner()))
+                .createdAt(billboard.getCreatedAt())
+                .imagePaths(billboard.getImagePaths())
+                .build();
+    }
+}

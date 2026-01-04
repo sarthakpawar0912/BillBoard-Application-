@@ -6,6 +6,7 @@ import com.billboarding.DTO.Payment.VerifyPaymentRequest;
 import com.billboarding.Entity.Bookings.Booking;
 import com.billboarding.Entity.User;
 import com.billboarding.Services.Payment.PaymentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,7 +24,7 @@ public class PaymentController {
      */
     @PostMapping("/create-order")
     public ResponseEntity<PaymentOrderResponse> createOrder(
-            @RequestBody CreatePaymentOrderRequest req,
+            @Valid @RequestBody CreatePaymentOrderRequest req,
             Authentication auth
     ) {
         User advertiser = (User) auth.getPrincipal();
@@ -36,7 +37,7 @@ public class PaymentController {
      */
     @PostMapping("/verify")
     public ResponseEntity<Booking> verifyPayment(
-            @RequestBody VerifyPaymentRequest req,
+            @Valid @RequestBody VerifyPaymentRequest req,
             Authentication auth
     ) {
         User advertiser = (User) auth.getPrincipal();

@@ -1,10 +1,11 @@
 package com.billboarding.Controller.Admin;
 
+import com.billboarding.DTO.ADMIN.BookingAuditResponse;
+import com.billboarding.DTO.ADMIN.OwnerStatsResponse;
 import com.billboarding.ENUM.BookingStatus;
 import com.billboarding.ENUM.KycStatus;
 import com.billboarding.Entity.Bookings.Booking;
 import com.billboarding.Entity.User;
-import com.billboarding.Repository.Audit.BookingAuditRepository;
 import com.billboarding.Services.Admin.AdminAnalyticsService;
 import com.billboarding.Services.Admin.AdminsService;
 import com.billboarding.Services.AdminService;
@@ -32,13 +33,13 @@ public class AdminController {
     private final AdminsService adminService;
     private final BookingService bookingService;
     private final AdminAnalyticsService adminAnalyticsService;
-    private final BookingAuditRepository bookingAuditRepository;
+    private final BookingAuditService bookingAuditService;
 
-    public AdminController(AdminsService adminService, BookingService bookingService, AdminService adminAnalyticsService, AdminAnalyticsService adminAnalyticsService1, BookingAuditService bookingAuditService, BookingAuditRepository bookingAuditRepository) {
+    public AdminController(AdminsService adminService, BookingService bookingService, AdminService adminAnalyticsService, AdminAnalyticsService adminAnalyticsService1, BookingAuditService bookingAuditService) {
         this.adminService = adminService;
         this.bookingService = bookingService;
         this.adminAnalyticsService = adminAnalyticsService1;
-        this.bookingAuditRepository = bookingAuditRepository;
+        this.bookingAuditService = bookingAuditService;
     }
 
     /**
@@ -55,6 +56,15 @@ public class AdminController {
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(adminService.getAllUsers());
+    }
+
+    /**
+     * 1️⃣.1 Get all owners with aggregated stats (billboard count, earnings)
+     * Used by Admin Owners page for accurate data display.
+     */
+    @GetMapping("/owners")
+    public ResponseEntity<List<OwnerStatsResponse>> getAllOwnersWithStats() {
+        return ResponseEntity.ok(adminService.getAllOwnersWithStats());
     }
 
     /**
@@ -139,13 +149,16 @@ public class AdminController {
         );
     }
 
+    /**
+     * Get booking audit trail with proper formatting.
+     * Returns history of all actions taken on this booking.
+     */
     @GetMapping("/bookings/{id}/audit")
-    public ResponseEntity<?> bookingAudit(
+    public ResponseEntity<BookingAuditResponse> bookingAudit(
             @PathVariable Long id
     ) {
-        return ResponseEntity.ok(
-                bookingAuditRepository.findByBookingId(id)
-        );
+        BookingAuditResponse auditTrail = bookingAuditService.getAuditTrail(id);
+        return ResponseEntity.ok(auditTrail);
     }
 
 }

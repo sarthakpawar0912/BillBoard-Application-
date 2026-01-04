@@ -3,10 +3,12 @@ package com.billboarding.Entity.Payment;
 import com.billboarding.ENUM.PaymentStatus;
 import com.billboarding.Entity.Bookings.Booking;
 import com.billboarding.Entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "payment_history")
 @Getter @Setter
@@ -24,16 +26,19 @@ public class PaymentHistory {
 
     private Double amount;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Booking booking;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "advertiser_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User advertiser;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User owner;
 
     private LocalDateTime paidAt;

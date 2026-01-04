@@ -3,6 +3,8 @@ package com.billboarding.Repository;
 import com.billboarding.ENUM.KycStatus;
 import com.billboarding.ENUM.UserRole;
 import com.billboarding.Entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,7 +15,7 @@ import java.util.Optional;
  * Repository layer for User entity.
  * Extends JpaRepository → gives us CRUD methods like save(), findById(), findAll(), etc.
  */
-@Repository  // Marks this as a Spring Bean for data access
+@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
     // Find user by email (used in login & registration duplicate check)
@@ -30,4 +32,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByBlockedTrue();
     List<User> findByRole(UserRole role);
 
+    // ===== OPTIMIZED COUNT QUERIES =====
+    long countByRole(UserRole role);
+    long countByKycStatus(KycStatus status);
+    long countByBlockedTrue();
+
+    // ===== PAGINATED QUERIES =====
+    Page<User> findByRole(UserRole role, Pageable pageable);
+    Page<User> findByKycStatus(KycStatus status, Pageable pageable);
+    Page<User> findByBlockedTrue(Pageable pageable);
 }
